@@ -1,0 +1,65 @@
+name: Node.js CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install AWS Elastic Beanstalk CLI
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3 python3-pip
+        pip3 install awsebcli --upgrade
+
+    - name: Configure AWS CLI
+      env:
+        env:
+          AWS_ACCESS_KEY_ID: $AKIAWNHTHL3SZGJEPZIS
+          AWS_SECRET_ACCESS_KEY: $8LB52blXRFawSBhx6opWU3QA8YsX5tgD4fXjkxVW
+       run: |
+        aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+        aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+        aws configure set region us-east-1
+
+    - name: Deploy to AWS Elastic Beanstalk
+      run: |
+        eb init url-shortener --platform node.js --region us-east-1
+      eb deploy
+
